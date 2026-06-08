@@ -222,41 +222,10 @@
      ROBLOX LOOKUP
   ═══════════════════════════════════════════════════════════ */
   function lookupRoblox(username, cb) {
-    /* Call Roblox APIs directly from the browser — no serverless dependency */
-    fetch('https://users.roblox.com/v1/usernames/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ usernames: [username], excludeBannedUsers: false }),
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (searchData) {
-      var found = searchData.data && searchData.data[0];
-      if (!found) { cb(null, { error: 'notfound' }); return null; }
-      var userId = found.id;
-      return Promise.all([
-        fetch('https://users.roblox.com/v1/users/' + userId, { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }),
-        fetch('https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=' + userId + '&size=150x150&format=Png&isCircular=false', { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }),
-      ]);
-    })
-    .then(function (results) {
-      if (!results) return;
-      var profile   = results[0];
-      var avatarData = results[1];
-      var created   = new Date(profile.created);
-      var now       = new Date();
-      var days      = Math.floor((now - created) / (1000 * 60 * 60 * 24));
-      var avatarUrl = (avatarData && avatarData.data && avatarData.data[0]) ? avatarData.data[0].imageUrl : null;
-      cb(null, {
-        id: profile.id,
-        name: profile.name,
-        displayName: profile.displayName,
-        description: profile.description || '',
-        created: profile.created,
-        days: days,
-        avatarUrl: avatarUrl,
-      });
-    })
-    .catch(function () { cb('apierr', null); });
+    fetch('/api/roblox/user?username=' + encodeURIComponent(username))
+      .then(function (r) { return r.json(); })
+      .then(function (data) { cb(null, data); })
+      .catch(function () { cb('apierr', null); });
   }
 
   /* ═══════════════════════════════════════════════════════════

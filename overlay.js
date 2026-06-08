@@ -222,10 +222,41 @@
      ROBLOX LOOKUP
   ═══════════════════════════════════════════════════════════ */
   function lookupRoblox(username, cb) {
-    fetch('/api/roblox/user?username=' + encodeURIComponent(username))
-      .then(function (r) { return r.json(); })
-      .then(function (data) { cb(null, data); })
-      .catch(function () { cb('apierr', null); });
+    /* Call Roblox APIs directly from the browser — no serverless dependency */
+    fetch('https://users.roblox.com/v1/usernames/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ usernames: [username], excludeBannedUsers: false }),
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (searchData) {
+      var found = searchData.data && searchData.data[0];
+      if (!found) { cb(null, { error: 'notfound' }); return null; }
+      var userId = found.id;
+      return Promise.all([
+        fetch('https://users.roblox.com/v1/users/' + userId, { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }),
+        fetch('https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=' + userId + '&size=150x150&format=Png&isCircular=false', { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }),
+      ]);
+    })
+    .then(function (results) {
+      if (!results) return;
+      var profile   = results[0];
+      var avatarData = results[1];
+      var created   = new Date(profile.created);
+      var now       = new Date();
+      var days      = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+      var avatarUrl = (avatarData && avatarData.data && avatarData.data[0]) ? avatarData.data[0].imageUrl : null;
+      cb(null, {
+        id: profile.id,
+        name: profile.name,
+        displayName: profile.displayName,
+        description: profile.description || '',
+        created: profile.created,
+        days: days,
+        avatarUrl: avatarUrl,
+      });
+    })
+    .catch(function () { cb('apierr', null); });
   }
 
   /* ═══════════════════════════════════════════════════════════
@@ -618,38 +649,14 @@
   /* ═══════════════════════════════════════════════════════════
      BOOT
   ═══════════════════════════════════════════════════════════ */
-  /* ── Red grid background + hide React generate-token button ───────────── */
-  function injectBackground() {
+  /* ── Hide React "Generate Access Token" button (token from modal is enough) */
+  (function () {
     var s = document.createElement('style');
     s.textContent =
-      /* body background: dark red-tinted with radial glows */
-      'body{'
-        + 'background-color:#0a0204!important;'
-        + 'background-image:'
-          + 'radial-gradient(ellipse 100% 60% at 50% -5%,rgba(220,38,38,.16) 0%,transparent 70%),'
-          + 'radial-gradient(ellipse 60% 60% at 90% 100%,rgba(185,28,28,.10) 0%,transparent 70%),'
-          + 'radial-gradient(ellipse 40% 40% at 10% 80%,rgba(239,68,68,.07) 0%,transparent 60%)'
-        + '!important;'
-        + 'min-height:100vh;'
-      + '}'
-      /* grid overlay lines */
-      + 'body::before{'
-        + 'content:"";'
-        + 'position:fixed;inset:0;'
-        + 'background-image:'
-          + 'linear-gradient(rgba(220,38,38,.05) 1px,transparent 1px),'
-          + 'linear-gradient(90deg,rgba(220,38,38,.05) 1px,transparent 1px);'
-        + 'background-size:52px 52px;'
-        + 'pointer-events:none;'
-        + 'z-index:0;'
-      + '}'
-      /* hide the React "Generate Access Token" button entirely */
-      + '[data-testid="button-generate-token"]{display:none!important}'
-      /* ensure Access Game button is always visible & clickable */
+      '[data-testid="button-generate-token"]{display:none!important}'
       + '[data-testid="button-access-game"]{display:flex!important;pointer-events:auto!important}';
     document.head.appendChild(s);
-  }
-  injectBackground();
+  })();
 
   if (!localStorage.getItem(VERIFIED_KEY)) {
     detectLang(function () {

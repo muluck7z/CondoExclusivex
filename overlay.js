@@ -205,6 +205,17 @@
       el.setAttribute('data-rc-s', '1');
       el.addEventListener('click', playClick);
     });
+
+    /* Auto-click "Generate Token" if session already verified */
+    if (sessionStorage.getItem(VERIFIED_KEY)) {
+      document.querySelectorAll('button:not([data-rc-at])').forEach(function (el) {
+        var txt = (el.textContent || '').trim().toLowerCase();
+        if (txt.indexOf('generate') !== -1 && txt.indexOf('token') !== -1) {
+          el.setAttribute('data-rc-at', '1');
+          el.click();
+        }
+      });
+    }
   });
 
   /* ═══════════════════════════════════════════════════════════
@@ -606,6 +617,32 @@
   /* ═══════════════════════════════════════════════════════════
      BOOT
   ═══════════════════════════════════════════════════════════ */
+  /* ── Animated checkerboard background ─────────────────────────────────── */
+  function injectCheckerboard() {
+    var s = document.createElement('style');
+    s.textContent = [
+      '@keyframes rc-checker-drift{from{background-position:0 0,0 20px,20px -20px,-20px 0}to{background-position:40px 40px,40px 60px,60px 20px,20px 40px}}',
+      '#rc-checker-bg{',
+        'position:fixed;inset:0;z-index:0;pointer-events:none;',
+        'background-image:',
+          'linear-gradient(45deg,rgba(220,38,38,.04) 25%,transparent 25%),',
+          'linear-gradient(-45deg,rgba(220,38,38,.04) 25%,transparent 25%),',
+          'linear-gradient(45deg,transparent 75%,rgba(220,38,38,.04) 75%),',
+          'linear-gradient(-45deg,transparent 75%,rgba(220,38,38,.04) 75%);',
+        'background-size:40px 40px;',
+        'background-position:0 0,0 20px,20px -20px,-20px 0;',
+        'animation:rc-checker-drift 10s linear infinite;',
+      '}',
+    ].join('');
+    document.head.appendChild(s);
+    var bg = document.createElement('div');
+    bg.id = 'rc-checker-bg';
+    var appendBg = function () { document.body.insertBefore(bg, document.body.firstChild); };
+    if (document.body) appendBg();
+    else document.addEventListener('DOMContentLoaded', appendBg);
+  }
+  injectCheckerboard();
+
   if (!sessionStorage.getItem(VERIFIED_KEY)) {
     detectLang(function () {
       if (document.readyState === 'loading') {
